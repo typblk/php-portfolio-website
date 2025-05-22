@@ -23,158 +23,89 @@ $_SESSION['LAST_ACTIVITY'] = time();
 <?php
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
+require_once __DIR__ . '/../helpers/upload_utils.php'; // Include the new utility file
 
 include "admin-partials/_header.php";
 
+use Typ\Helpers; // Use the namespace
 
 if (isset($_POST["submit"])) {
-    $baslik = $_POST["baslik"];
-    $etiket = $_POST["etiket"];
-    $kisa_aciklama = $_POST["kisa_aciklama"];
-    $blog = $_POST["blog"];
-    $tarih = date('Y-m-d');
-
-    // Blog başlığını uygun URL formatına dönüştüren fonksiyon
-    function slugify($title)
-    {
-        $title = strtolower($title);
-        $title = str_replace(
-            ['ç', 'ğ', 'ı', 'ö', 'ş', 'ü'],
-            ['c', 'g', 'i', 'o', 's', 'u'],
-            $title
-        );
-        $title = preg_replace('/[^a-z0-9]+/', '-', $title);
-        $title = trim($title, '-');
-
-        return $title;
-    }
-    $blogUrl = slugify($baslik);
-
-    // Dosya yükleme işlemleri
-    $uploadDir = '../images/';
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/svg+xml', 'image/webp'];
-    $maxFileSize = 10 * 1024 * 1024; // 5MB
-
-    $fotograf = $_FILES['fotograf'];
-
-    $errors = [];
+    $errors = []; // Initialize errors array
     $success = "";
 
-    $fotografName = $fotograf['name'];
-    $fotografTmpName = $fotograf['tmp_name'];
-    $fotografSize = $fotograf['size'];
-    $fotografType = $fotograf['type'];
+    // Retrieve raw POST data
+    $baslik_raw = $_POST["baslik"] ?? '';
+    $etiket_raw = $_POST["etiket"] ?? '';
+    $kisa_aciklama_raw = $_POST["kisa_aciklama"] ?? '';
+    $blog_raw = $_POST["blog"] ?? '';
+    $tarih = date('Y-m-d');
 
-    // Dosya türü ve boyutu kontrolü
-    function isValidFile($file, $allowedTypes, $maxFileSize, &$errors)
-    {
-        if (!in_array($file['type'], $allowedTypes)) {
-            $errors[] = "Geçersiz dosya türü: " . $file['type'];
-            return false;
-        }
-        if ($file['size'] > $maxFileSize) {
-            $errors[] = "Dosya çok büyük: " . $file['name'];
-            return false;
-        }
-        return true;
+    // Validation
+    if (empty(trim($baslik_raw))) {
+        $errors[] = "Başlık boş bırakılamaz.";
+    }
+    if (empty(trim($kisa_aciklama_raw))) {
+        $errors[] = "Kısa açıklama boş bırakılamaz.";
+    }
+    if (empty(trim($blog_raw))) {
+        $errors[] = "Blog içeriği boş bırakılamaz.";
+    }
+    // Optional: Max length checks
+    if (mb_strlen(trim($baslik_raw)) > 255) {
+        $errors[] = "Başlık 255 karakterden uzun olamaz.";
+    }
+    if (mb_strlen(trim($kisa_aciklama_raw)) > 500) { // Example length
+        $errors[] = "Kısa açıklama 500 karakterden uzun olamaz.";
     }
 
-    // Dosya adı oluşturma fonksiyonu
-    function generateFileName($baslik)
-    {
-        $counterFile = 'counter.txt';
-        if (!file_exists($counterFile)) {
-            file_put_contents($counterFile, '0');
-        }
+    // Proceed only if initial validation passes
+    if (empty($errors)) {
+        // Sanitization
+        $baslik_sanitized = htmlspecialchars(trim($baslik_raw), ENT_QUOTES, 'UTF-8');
+        $etiket_sanitized = htmlspecialchars(trim($etiket_raw), ENT_QUOTES, 'UTF-8');
+        $kisa_aciklama_sanitized = htmlspecialchars(trim($kisa_aciklama_raw), ENT_QUOTES, 'UTF-8');
+        // For 'blog' content, if it's intended to be plain text or needs escaping for security.
+        // If it's HTML from a WYSIWYG, this might be too aggressive.
+        // Assuming for now it should be escaped.
+        $blog_sanitized = htmlspecialchars(trim($blog_raw), ENT_QUOTES, 'UTF-8');
 
-        $counter = (int)file_get_contents($counterFile);
-        $counter++;
-        file_put_contents($counterFile, $counter);
+        // Use sanitized slugify from helpers
+        $blogUrl = Helpers\slugify($baslik_sanitized);
 
-        $fileName = slugify($baslik) . '_' . $counter . '.webp';
-        return $fileName;
-    }
+        // Dosya yükleme işlemleri
+        $uploadDir = '../images/'; // Relative to this script (typ/admin/blog-yaz.php)
+        $allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'
+        ];
+        $maxFileSize = 10 * 1024 * 1024; // 10MB
 
-    // Resim dosyasını webp formatına dönüştürme fonksiyonu
-    function convertToWebp($sourcePath, $destinationPath)
-    {
-        $info = getimagesize($sourcePath);
-        $mime = $info['mime'];
+        $fotograf = $_FILES['fotograf'];
+        $uploadedFileName = null; // Initialize
 
-        switch ($mime) {
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($sourcePath);
-                break;
-            case 'image/png':
-                $image = imagecreatefrompng($sourcePath);
-                break;
-            case 'image/webp':
-                $image = imagecreatefromwebp($sourcePath);
-                break;
-            case 'image/gif':
-                $image = imagecreatefromgif($sourcePath);
-                break;
-            default:
-                return false;
-        }
-
-        imagewebp($image, $destinationPath);
-        imagedestroy($image);
-        return true;
-    }
-
-    // Dosya yükleme ve işleme
-    function processFileUpload($file, $baslik, $uploadDir, $allowedTypes, $maxFileSize, &$errors)
-    {
-        if (isValidFile($file, $allowedTypes, $maxFileSize, $errors)) {
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            $fileType = $file['type'];
-            $fileName = generateFileName($baslik);
-
-            if ($fileType === 'image/svg+xml') {
-                // SVG dosyasını doğrudan taşı
-                $destinationPath = $uploadDir . pathinfo($file['name'], PATHINFO_FILENAME) . '.svg';
-                if (move_uploaded_file($file['tmp_name'], $destinationPath)) {
-                    return pathinfo($file['name'], PATHINFO_FILENAME) . '.svg';
-                } else {
-                    $errors[] = "SVG dosyası taşınırken bir hata oluştu: " . $file['name'];
-                    return false;
-                }
-            } else {
-                // Geçici dosya yolları
-                $tmpPath = $uploadDir . 'temp_' . uniqid() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
-                if (move_uploaded_file($file['tmp_name'], $tmpPath)) {
-                    $destinationPath = $uploadDir . $fileName;
-                    if (convertToWebp($tmpPath, $destinationPath)) {
-                        unlink($tmpPath);
-                        return $fileName;
-                    } else {
-                        $errors[] = "Dosya webp formatına dönüştürülürken bir hata oluştu: " . $file['name'];
-                        return false;
-                    }
-                } else {
-                    $errors[] = "Dosya geçici olarak taşınırken bir hata oluştu: " . $file['name'];
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-
-    $uploadedFileName = processFileUpload($fotograf, $baslik, $uploadDir, $allowedTypes, $maxFileSize, $errors);
-
-    if ($uploadedFileName) {
-        $bloglar = new Tayyip();
-        if ($bloglar->createBlog($baslik, $uploadedFileName, $etiket, $kisa_aciklama, $blog, $tarih, $blogUrl)) {
-            $success = "Blog başarıyla eklendi.";
+        // Check if a file was actually uploaded
+        if (isset($fotograf['name']) && $fotograf['error'] !== UPLOAD_ERR_NO_FILE) {
+            // Call processFileUpload from helpers using sanitized baslik for baseName
+            $uploadedFileName = Helpers\processFileUpload($fotograf, $baslik_sanitized, $uploadDir, $allowedTypes, $maxFileSize, $errors);
         } else {
-            $errors[] = "Blog eklenirken bir hata oluştu.";
+            // If no file is uploaded, or it's optional, you might not add an error.
+            // If a file is required, add an error:
+            $errors[] = "Blog fotoğrafı yüklenmelidir."; 
+        }
+
+        // Proceed with database insertion only if file upload was successful (or optional and no file was uploaded)
+        // and no new errors occurred during file upload.
+        if (empty($errors)) { // Re-check errors after potential file upload issues
+            $bloglar = new Tayyip();
+            // Use sanitized variables for database insertion
+            if ($bloglar->createBlog($baslik_sanitized, $uploadedFileName, $etiket_sanitized, $kisa_aciklama_sanitized, $blog_sanitized, $tarih, $blogUrl)) {
+                $success = "Blog başarıyla eklendi.";
+            } else {
+                $errors[] = "Blog eklenirken bir veritabanı hatası oluştu.";
+            }
         }
     }
 
+    // Display errors or success message
     if (!empty($errors)) {
         foreach ($errors as $error) {
             echo '
@@ -189,19 +120,12 @@ if (isset($_POST["submit"])) {
                     </div>
                 </div>';
         }
-    } elseif ($success) {
-        echo '
-            <div class="bs-toast toast toast-placement-ex m-2 top-0 end-0 fade show bg-success" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <i class="bx bx-bell me-2"></i>
-                    <div class="me-auto fw-medium">Başarılı</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    ' . htmlspecialchars($success) . '
-                </div>
-            </div>';
-        echo '<script>window.location.href = "bloglar.php";</script>';
+    } elseif (!empty($success)) { // Check if $success is not empty
+        // The success message ($success) is set, but will not be displayed on this page
+        // due to the immediate header redirect.
+        // Consider using session flash messages to display the success message on the target page (bloglar.php).
+        // For example, $_SESSION['flash_message'] = $success;
+        header("Location: bloglar.php");
         exit();
     }
 }
