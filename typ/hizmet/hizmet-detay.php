@@ -2,8 +2,8 @@
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
 
-$ayarlar = new Tayyip();
-$item = $ayarlar->getAyarlar();
+$ayarlarInstance = new Tayyip();
+$site_settings = $ayarlarInstance->getAyarlar();
 ?>
 
 <?php
@@ -13,40 +13,58 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
 
 <?php
 $hizmetUrl = isset($_GET['slug']) ? $_GET['slug'] : '';
-$hizmetler = new Tayyip();
-$itemh = $hizmetler->getHizmetSlug($hizmetUrl);
+$hizmetInstance = new Tayyip();
+$itemh = $hizmetInstance->getHizmetSlug($hizmetUrl);
+
+if (!$itemh) {
+    // Redirect to homepage or a relevant page if service not found
+    header("Location: /");
+    exit();
+}
+
+$meta_title = htmlspecialchars($itemh->hizmet) . " | " . htmlspecialchars($site_settings->site_adi);
+$meta_description = !empty($itemh->kisa_aciklama) ? htmlspecialchars($itemh->kisa_aciklama) : htmlspecialchars($site_settings->site_desc);
+// Combine service title with general site keywords for more relevance
+$meta_keywords = htmlspecialchars($itemh->hizmet) . ', ' . htmlspecialchars($site_settings->site_keyw);
+
+$canonical_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/hizmet/' . htmlspecialchars($itemh->hizmetUrl);
+// Ensure $itemh->fotograf exists and is not empty before constructing the URL
+$og_image_url = !empty($itemh->fotograf) ? rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($itemh->fotograf) : rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->logo); // Fallback to site logo
+$favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->favicon);
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
+    <?php if(isset($site_settings->analytic)) { echo $site_settings->analytic; } ?>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!-- Primary Meta Tags -->
-    <title><?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemh->hizmet) ?></title>
+    <title><?php echo $meta_title; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemh->hizmet) ?>">
-    <meta name="author" content="Tayyip Bölük">
-    <meta name="description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($item->site_keyw) ?>" />
-    <link rel="canonical" href="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta name="title" content="<?php echo $meta_title; ?>">
+    <meta name="author" content="Tayyip Bölük"> <!-- Assuming Tayyip Bölük is the author for all content -->
+    <meta name="description" content="<?php echo $meta_description; ?>">
+    <meta name="keywords" content="<?php echo $meta_keywords; ?>" />
+    <link rel="canonical" href="<?php echo $canonical_url; ?>">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="Sebsite">
-    <meta property="og:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="og:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemh->hizmet) ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="og:image" content="../images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="og:type" content="object"> {/* Consider "article" if service pages have substantial unique content or "product.group" for a collection of services */}
+    <meta property="og:url" content="<?php echo $canonical_url; ?>">
+    <meta property="og:title" content="<?php echo htmlspecialchars($itemh->hizmet); ?>">
+    <meta property="og:description" content="<?php echo $meta_description; ?>">
+    <meta property="og:image" content="<?php echo $og_image_url; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($site_settings->site_adi); ?>">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="twitter:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemh->hizmet) ?>">
-    <meta property="twitter:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="twitter:image" content="./images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="twitter:url" content="<?php echo $canonical_url; ?>">
+    <meta property="twitter:title" content="<?php echo htmlspecialchars($itemh->hizmet); ?>">
+    <meta property="twitter:description" content="<?php echo $meta_description; ?>">
+    <meta property="twitter:image" content="<?php echo $og_image_url; ?>">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./images/<?php echo htmlspecialchars($item->favicon) ?>">
+    <link rel="icon" type="image/png" href="<?php echo $favicon_url; ?>">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
@@ -58,6 +76,38 @@ $itemh = $hizmetler->getHizmetSlug($hizmetUrl);
     <link type="text/css" href="../css/swipe.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "serviceType": "<?php echo htmlspecialchars($itemh->hizmet); ?>",
+        "name": "<?php echo htmlspecialchars($itemh->hizmet); ?>",
+        "description": "<?php echo $meta_description; ?>",
+        <?php if(!empty($itemh->fotograf)): ?>
+        "image": "<?php echo $og_image_url; ?>",
+        <?php endif; ?>
+        "url": "<?php echo $canonical_url; ?>",
+        "provider": {
+            "@type": "Person",
+            "name": "Tayyip Bölük"
+        },
+        "areaServed": {
+            "@type": "Country",
+            "name": "Türkiye"
+        },
+        // Example of how to list offers if applicable
+        // "offers": {
+        //    "@type": "Offer",
+        //    "priceCurrency": "TRY", // Change as needed
+        //    "priceSpecification": {
+        //        "@type": "PriceSpecification",
+        //        "minPrice": "100", // Example
+        //        "maxPrice": "500"  // Example
+        //     }
+        // },
+        "keywords": "<?php echo $meta_keywords; ?>" // Using keywords from earlier PHP block
+    }
+    </script>
     <!-- NOTICE: You can use the _analytics.html partial to include production code specific code & trackers -->
 
 </head>

@@ -5,6 +5,8 @@ RewriteRule ^hizmet/([a-z0-9\-]+)$ hizmet/hizmet-detay.php?slug=$1 [L]
 RewriteRule ^proje/([a-z0-9\-]+)$ proje/proje-detay.php?slug=$1 [L]
 RewriteRule ^urunler/([a-z0-9\-]+)$ urunler/urun-detay.php?slug=$1 [L]
 
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]

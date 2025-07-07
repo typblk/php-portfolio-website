@@ -35,24 +35,25 @@ $title = $pageTitles[$page] ?? '';
     <meta name="author" content="Tayyip Bölük">
     <meta name="description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
     <meta name="keywords" content="<?php echo htmlspecialchars($item->site_keyw) ?>" />
-    <link rel="canonical" href="<?php echo htmlspecialchars($item->site_url) ?>">
+    <link rel="canonical" href="<?php echo rtrim(htmlspecialchars($item->site_url), '/') . $_SERVER['REQUEST_URI']; ?>">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="Sebsite">
-    <meta property="og:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo rtrim(htmlspecialchars($item->site_url), '/') . $_SERVER['REQUEST_URI']; ?>">
     <meta property="og:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo $title; ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="og:image" content="../images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="og:image" content="<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/images/<?php echo htmlspecialchars($item->logo); ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($item->site_adi); ?>">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta property="twitter:url" content="<?php echo rtrim(htmlspecialchars($item->site_url), '/') . $_SERVER['REQUEST_URI']; ?>">
     <meta property="twitter:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo $title; ?>">
     <meta property="twitter:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="twitter:image" content="./images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="twitter:image" content="<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/images/<?php echo htmlspecialchars($item->logo); ?>">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./images/<?php echo htmlspecialchars($item->favicon) ?>">
+    <link rel="icon" type="image/png" href="<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/images/<?php echo htmlspecialchars($item->favicon); ?>">
     <meta name="msapplication-TileColor" content="#183B56">
     <meta name="theme-color" content="#ffffff">
 
@@ -64,7 +65,45 @@ $title = $pageTitles[$page] ?? '';
     <link type="text/css" href="./css/swipe.css" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
 
-   
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": "<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/",
+        "name": "<?php echo htmlspecialchars($item->site_adi); ?>",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/arama?q={search_term_string}", // Assuming a search page like /arama
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person", // Change to Organization if it's a company
+        "name": "Tayyip Bölük", // Author/Owner Name
+        "url": "<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/",
+        <?php if(!empty($item->logo)): ?>
+        "image": "<?php echo rtrim(htmlspecialchars($item->site_url), '/'); ?>/images/<?php echo htmlspecialchars($item->logo); ?>",
+        <?php endif; ?>
+        <?php
+            $socialLinks = [];
+            if (!empty($item->insta)) $socialLinks[] = htmlspecialchars($item->insta);
+            if (!empty($item->linke)) $socialLinks[] = htmlspecialchars($item->linke);
+            if (!empty($item->git)) $socialLinks[] = htmlspecialchars($item->git);
+            if (!empty($item->x)) $socialLinks[] = htmlspecialchars($item->x);
+            if (!empty($item->face)) $socialLinks[] = htmlspecialchars($item->face);
+            if (!empty($item->you)) $socialLinks[] = htmlspecialchars($item->you);
+            if (!empty($item->tele)) $socialLinks[] = htmlspecialchars($item->tele);
+
+            if (!empty($socialLinks)):
+        ?>
+        "sameAs": <?php echo json_encode($socialLinks); ?>,
+        <?php endif; ?>
+        "jobTitle": "Yazılım Geliştirici" // Example, make this dynamic if available
+    }
+    </script>
 
 </head>
 

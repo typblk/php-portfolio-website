@@ -2,8 +2,8 @@
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
 
-$ayarlar = new Tayyip();
-$item = $ayarlar->getAyarlar();
+$ayarlarInstance = new Tayyip(); // Renamed to avoid conflict
+$site_settings = $ayarlarInstance->getAyarlar(); // Global site settings
 ?>
 
 <?php
@@ -13,40 +13,49 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
 
 <?php
 $blogUrl = isset($_GET['slug']) ? $_GET['slug'] : '';
-$bloglar = new Tayyip();
-$itemb = $bloglar->getBlogSlug($blogUrl);
+$bloglarInstance = new Tayyip(); // Renamed to avoid conflict
+$itemb = $bloglarInstance->getBlogSlug($blogUrl); // Current blog post details
+
+// Fallback for meta description if blog's short description is empty
+$meta_description = !empty($itemb->kisa_aciklama) ? htmlspecialchars($itemb->kisa_aciklama) : htmlspecialchars($site_settings->site_desc);
+$canonical_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/bloglar/' . htmlspecialchars($itemb->blogUrl);
+$og_image_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($itemb->fotograf);
+$favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->favicon);
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
+    <?php echo $site_settings->analytic; // Include analytics code ?>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!-- Primary Meta Tags -->
-    <title><?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemb->baslik) ?></title>
+    <title><?php echo htmlspecialchars($itemb->baslik); ?> | <?php echo htmlspecialchars($site_settings->site_adi); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemb->baslik) ?>">
+    <meta name="title" content="<?php echo htmlspecialchars($itemb->baslik); ?> | <?php echo htmlspecialchars($site_settings->site_adi); ?>">
     <meta name="author" content="Tayyip Bölük">
-    <meta name="description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($item->site_keyw) ?>" />
-    <link rel="canonical" href="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta name="description" content="<?php echo $meta_description; ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($itemb->etiket); // Use blog tags as keywords, fallback to site keywords if needed or combine them ?>" />
+    <link rel="canonical" href="<?php echo $canonical_url; ?>">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="Sebsite">
-    <meta property="og:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="og:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemb->baslik) ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="og:image" content="../images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="<?php echo $canonical_url; ?>">
+    <meta property="og:title" content="<?php echo htmlspecialchars($itemb->baslik); ?>">
+    <meta property="og:description" content="<?php echo $meta_description; ?>">
+    <meta property="og:image" content="<?php echo $og_image_url; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($site_settings->site_adi); ?>">
+
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="twitter:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemb->baslik) ?>">
-    <meta property="twitter:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="twitter:image" content="./images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="twitter:url" content="<?php echo $canonical_url; ?>">
+    <meta property="twitter:title" content="<?php echo htmlspecialchars($itemb->baslik); ?>">
+    <meta property="twitter:description" content="<?php echo $meta_description; ?>">
+    <meta property="twitter:image" content="<?php echo $og_image_url; ?>"> <?php // Twitter often uses og:image if twitter:image is not specified, but explicit is better ?>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./images/<?php echo htmlspecialchars($item->favicon) ?>">
+    <link rel="icon" type="image/png" href="<?php echo $favicon_url; ?>">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
@@ -58,7 +67,37 @@ $itemb = $bloglar->getBlogSlug($blogUrl);
     <link type="text/css" href="../css/swipe.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
-    <!-- NOTICE: You can use the _analytics.html partial to include production code specific code & trackers -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting", // Or Article
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "<?php echo $canonical_url; ?>"
+        },
+        "headline": "<?php echo htmlspecialchars($itemb->baslik); ?>",
+        <?php if(!empty($itemb->fotograf)): ?>
+        "image": "<?php echo $og_image_url; ?>",
+        <?php endif; ?>
+        "datePublished": "<?php echo !empty($itemb->tarih) ? date('Y-m-d\TH:i:sP', strtotime($itemb->tarih)) : ''; ?>",
+        "dateModified": "<?php echo !empty($itemb->tarih) ? date('Y-m-d\TH:i:sP', strtotime($itemb->tarih)) : ''; ?>", // Assuming tarih is also last modified date
+        "author": {
+            "@type": "Person",
+            "name": "Tayyip Bölük" // Assuming author is always Tayyip Bölük
+        },
+        "publisher": {
+            "@type": "Organization", // Or Person, if the publisher is the same as the author
+            "name": "<?php echo htmlspecialchars($site_settings->site_adi); ?>",
+            <?php if(!empty($site_settings->logo)): ?>
+            "logo": {
+                "@type": "ImageObject",
+                "url": "<?php echo rtrim(htmlspecialchars($site_settings->site_url), '/'); ?>/images/<?php echo htmlspecialchars($site_settings->logo); ?>"
+            }
+            <?php endif; ?>
+        },
+        "description": "<?php echo $meta_description; ?>"
+    }
+    </script>
 
 </head>
 
