@@ -92,20 +92,55 @@ $item = $ayarlar->getAyarlar();
 </footer>
 
 <!-- Core -->
-<script src="./vendor/popper.js/dist/umd/popper.min.js"></script>
-<script src="./vendor/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="./vendor/headroom.js/dist/headroom.min.js"></script>
+<script src="./vendor/popper.js/dist/umd/popper.min.js" defer></script>
+<script src="./vendor/bootstrap/dist/js/bootstrap.min.js" defer></script>
+<script src="./vendor/headroom.js/dist/headroom.min.js" defer></script>
 
 <!-- Vendor JS -->
-<script src="./vendor/onscreen/dist/on-screen.umd.min.js"></script>
-<script src="./vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js"></script>
+<script src="./vendor/onscreen/dist/on-screen.umd.min.js" defer></script>
+<script src="./vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js" defer></script>
 
-<script src="vendor/isotope/imagesload.pkgd.min.js"></script>
+<script src="./vendor/isotope/imagesload.pkgd.min.js" defer></script> {/* Corrected path to be consistent */}
 
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 
 <!-- Swipe JS -->
-<script src="./assets/js/swipe.js"></script>
+<script src="./assets/js/swipe.js" defer></script>
+
+<!-- CV Modal -->
+<div class="modal fade" id="cvModal" tabindex="-1" aria-labelledby="cvModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cvModalLabel">Özgeçmiş - Tayyip Bölük</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> {/* Ensure btn-close is styled or use Bootstrap's default X */}
+            </div>
+            <div class="modal-body" style="height: 75vh;"> {/* Adjust height as needed */}
+                <?php if (!empty($item->cv)):
+                    // Constructing an absolute path using site_url for robustness
+                    $cv_filename = htmlspecialchars($item->cv);
+                    $base_site_url = rtrim(htmlspecialchars($item->site_url), '/');
+                    // Check if 'typ' is already part of site_url. If not, and 'dosyalar' is inside 'typ', adjust accordingly.
+                    // Assuming 'dosyalar' is at the same level as 'index.php' within the site structure defined by site_url.
+                    // If site_url is 'https://tayyipboluk.com' and files are in 'https://tayyipboluk.com/dosyalar/', this is fine.
+                    // If site_url is 'https://tayyipboluk.com/typ' and files are in 'https://tayyipboluk.com/typ/dosyalar/', this is also fine.
+                    $cv_path = $base_site_url . "/dosyalar/" . $cv_filename;
+                ?>
+                    <embed id="cvPdfEmbed" src="<?php echo $cv_path; ?>" type="application/pdf" width="100%" height="100%">
+                    <p class="text-center mt-2">PDF görüntülenemiyorsa, <a href="<?php echo $cv_path; ?>" target="_blank">buradan indirmeyi deneyin</a>.</p>
+                <?php else: ?>
+                    <p>Özgeçmiş bulunamadı veya yüklenmemiş.</p>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <?php if (!empty($item->cv)): ?>
+                    <a id="cvDownloadLinkModal" href="<?php echo $cv_path; ?>" download="Tayyip_Boluk_Ozgecmis.pdf" class="btn btn-primary">İndir</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 

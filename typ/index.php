@@ -58,7 +58,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
                     </div>
                 </div>
                 <div class="col-12 col-lg-6 justify-content-center">
-                    <img class="d-none d-md-inline-block" src="images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="Mobile App Mockup">
+                    <?php
+                        $hero_image_filename = htmlspecialchars($item->fotograf);
+                        $hero_image_path = "images/" . $hero_image_filename;
+                        $hero_image_webp_path = "images/" . pathinfo($hero_image_filename, PATHINFO_FILENAME) . '.webp';
+                        $file_extension = strtolower(pathinfo($hero_image_filename, PATHINFO_EXTENSION));
+                        $mime_type = ($file_extension == 'jpg' || $file_extension == 'jpeg') ? 'image/jpeg' : (($file_extension == 'png') ? 'image/png' : 'image/octet-stream'); // Basic mime type
+                    ?>
+                    <picture>
+                        <source srcset="<?php echo $hero_image_webp_path; ?>" type="image/webp">
+                        <source srcset="<?php echo $hero_image_path; ?>" type="<?php echo $mime_type; ?>">
+                        <img class="d-none d-md-inline-block" src="<?php echo $hero_image_path; ?>" alt="Tayyip Bölük - <?php echo htmlspecialchars($item->baslik); ?>">
+                    </picture>
                 </div>
             </div>
         </div>
@@ -73,7 +84,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
             <div class="row">
                 <div class="row row-grid align-items-center mb-5 mb-lg-7">
                     <div class="col-12 col-lg-6 ml-lg-auto">
-                        <img src="images/<?php echo htmlspecialchars($item->fotograf) ?>" class="w-100" alt="<?php echo htmlspecialchars($item->baslik) ?>">
+                        <?php
+                            $hakkimda_image_filename = htmlspecialchars($item->fotograf);
+                            $hakkimda_image_path = "images/" . $hakkimda_image_filename;
+                            $hakkimda_image_webp_path = "images/" . pathinfo($hakkimda_image_filename, PATHINFO_FILENAME) . '.webp';
+                            $hakkimda_file_extension = strtolower(pathinfo($hakkimda_image_filename, PATHINFO_EXTENSION));
+                            $hakkimda_mime_type = ($hakkimda_file_extension == 'jpg' || $hakkimda_file_extension == 'jpeg') ? 'image/jpeg' : (($hakkimda_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                        <picture>
+                            <source srcset="<?php echo $hakkimda_image_webp_path; ?>" type="image/webp">
+                            <source srcset="<?php echo $hakkimda_image_path; ?>" type="<?php echo $hakkimda_mime_type; ?>">
+                            <img src="<?php echo $hakkimda_image_path; ?>" class="w-100" alt="<?php echo htmlspecialchars($item->baslik); ?>">
+                        </picture>
                     </div>
                     <div class="col-12 col-lg-5">
                         <h2 class="mb-4"><?php echo htmlspecialchars($item->baslik) ?></h2>
@@ -102,7 +124,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
             ?>
                 <div class="row row-grid align-items-center mb-5 mb-lg-7">
                     <div class="col-12 col-lg-3 ml-lg-auto">
-                        <img src="images/<?php echo htmlspecialchars($item->fotograf) ?>" class="w-100" alt="<?php echo htmlspecialchars($item->baslik) ?>">
+                        <?php
+                            $urun_image_filename = htmlspecialchars($item->fotograf);
+                            $urun_image_path = "images/" . $urun_image_filename;
+                            $urun_image_webp_path = "images/" . pathinfo($urun_image_filename, PATHINFO_FILENAME) . '.webp';
+                            $urun_file_extension = strtolower(pathinfo($urun_image_filename, PATHINFO_EXTENSION));
+                            $urun_mime_type = ($urun_file_extension == 'jpg' || $urun_file_extension == 'jpeg') ? 'image/jpeg' : (($urun_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                        <picture>
+                            <source srcset="<?php echo $urun_image_webp_path; ?>" type="image/webp">
+                            <source srcset="<?php echo $urun_image_path; ?>" type="<?php echo $urun_mime_type; ?>">
+                            <img src="<?php echo $urun_image_path; ?>" class="w-100" alt="<?php echo htmlspecialchars($item->baslik); ?>">
+                        </picture>
                     </div>
                     <div class="col-12 col-lg-9">
                         <h2 class="mb-4"><?php echo htmlspecialchars($item->baslik) ?></h2>
@@ -161,7 +194,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
                             <a href="/proje/<?php echo htmlspecialchars($item->projeUrl) ?>" data-filter="<?php echo htmlspecialchars($item->kategori) ?>" class="col-lg-4 col-md-6 p-3 all">
                                 <div class="portfolio_box">
                                     <div class="single_portfolio">
-                                        <img class="img-fluid w-100 rounded" src="images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->proje) ?>">
+                                        <?php
+                                            $proj_thumb_filename = htmlspecialchars($item->fotograf);
+                                            $proj_thumb_path = "images/" . $proj_thumb_filename;
+                                            $proj_thumb_webp_path = "images/" . pathinfo($proj_thumb_filename, PATHINFO_FILENAME) . '.webp';
+                                            $proj_thumb_file_extension = strtolower(pathinfo($proj_thumb_filename, PATHINFO_EXTENSION));
+                                            $proj_thumb_mime_type = ($proj_thumb_file_extension == 'jpg' || $proj_thumb_file_extension == 'jpeg') ? 'image/jpeg' : (($proj_thumb_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                                        ?>
+                                        <picture>
+                                            <source srcset="<?php echo $proj_thumb_webp_path; ?>" type="image/webp">
+                                            <source srcset="<?php echo $proj_thumb_path; ?>" type="<?php echo $proj_thumb_mime_type; ?>">
+                                            <img class="img-fluid w-100 rounded" src="<?php echo $proj_thumb_path; ?>" alt="<?php echo htmlspecialchars($item->proje); ?>">
+                                        </picture>
                                         <div class="overlay"></div>
                                     </div>
                                     <div class="short_info">
@@ -199,7 +243,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
                         <div class="col-12 col-md-6 col-lg-4 mb-4">
                             <div class="card border-light">
                                 <div class="card-body text-center py-5">
-                                    <img class="image-sm img-fluid mx-auto mb-3" src="images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->yorum_yapan) ?>">
+                                    <?php
+                                        $avatar_filename = htmlspecialchars($item->fotograf);
+                                        $avatar_path = "images/" . $avatar_filename;
+                                        $avatar_webp_path = "images/" . pathinfo($avatar_filename, PATHINFO_FILENAME) . '.webp';
+                                        $avatar_file_extension = strtolower(pathinfo($avatar_filename, PATHINFO_EXTENSION));
+                                        $avatar_mime_type = ($avatar_file_extension == 'jpg' || $avatar_file_extension == 'jpeg') ? 'image/jpeg' : (($avatar_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                                    ?>
+                                    <picture>
+                                        <source srcset="<?php echo $avatar_webp_path; ?>" type="image/webp">
+                                        <source srcset="<?php echo $avatar_path; ?>" type="<?php echo $avatar_mime_type; ?>">
+                                        <img class="image-sm img-fluid mx-auto mb-3" src="<?php echo $avatar_path; ?>" alt="<?php echo htmlspecialchars($item->yorum_yapan); ?>" width="80" height="80"> {/* Assuming 80x80px for image-sm avatars */}
+                                    </picture>
                                     <p class="px-2 my-4"><?php echo htmlspecialchars($item->yorum) ?></p>
                                 </div>
                             </div>
@@ -228,7 +283,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
                         <div class="col">
                             <div class="card h-100">
                                 <a href="/bloglar/<?php echo htmlspecialchars($item->blogUrl) ?>">
-                                    <img src="images/<?php echo htmlspecialchars($item->fotograf) ?>" class="card-img-top" alt="<?php echo htmlspecialchars($item->baslik) ?>">
+                                    <?php
+                                        $blog_thumb_filename = htmlspecialchars($item->fotograf);
+                                        $blog_thumb_path = "images/" . $blog_thumb_filename;
+                                        $blog_thumb_webp_path = "images/" . pathinfo($blog_thumb_filename, PATHINFO_FILENAME) . '.webp';
+                                        $blog_thumb_file_extension = strtolower(pathinfo($blog_thumb_filename, PATHINFO_EXTENSION));
+                                        $blog_thumb_mime_type = ($blog_thumb_file_extension == 'jpg' || $blog_thumb_file_extension == 'jpeg') ? 'image/jpeg' : (($blog_thumb_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                                    ?>
+                                    <picture>
+                                        <source srcset="<?php echo $blog_thumb_webp_path; ?>" type="image/webp">
+                                        <source srcset="<?php echo $blog_thumb_path; ?>" type="<?php echo $blog_thumb_mime_type; ?>">
+                                        <img src="<?php echo $blog_thumb_path; ?>" class="card-img-top" alt="<?php echo htmlspecialchars($item->baslik); ?>">
+                                    </picture>
                                 </a>
                                 <div class="card-body">
                                     <a href="/bloglar/<?php echo htmlspecialchars($item->blogUrl) ?>">
@@ -300,7 +366,18 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
                     </form>
                 </div>
                 <div class="col-12 col-lg-5 ml-lg-auto">
-                    <img class="d-none d-lg-inline-block" src="images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="iletişim">
+                    <?php
+                        $iletisim_image_filename = htmlspecialchars($item->fotograf); // Assuming $item here is from $ayarlar->getAyarlar()
+                        $iletisim_image_path = "images/" . $iletisim_image_filename;
+                        $iletisim_image_webp_path = "images/" . pathinfo($iletisim_image_filename, PATHINFO_FILENAME) . '.webp';
+                        $iletisim_file_extension = strtolower(pathinfo($iletisim_image_filename, PATHINFO_EXTENSION));
+                        $iletisim_mime_type = ($iletisim_file_extension == 'jpg' || $iletisim_file_extension == 'jpeg') ? 'image/jpeg' : (($iletisim_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                    ?>
+                    <picture>
+                        <source srcset="<?php echo $iletisim_image_webp_path; ?>" type="image/webp">
+                        <source srcset="<?php echo $iletisim_image_path; ?>" type="<?php echo $iletisim_mime_type; ?>">
+                        <img class="d-none d-lg-inline-block" src="<?php echo $iletisim_image_path; ?>" alt="İletişim - Tayyip Bölük">
+                    </picture>
                 </div>
             </div>
         </div>

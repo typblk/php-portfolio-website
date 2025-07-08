@@ -2,8 +2,8 @@
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
 
-$ayarlar = new Tayyip();
-$item = $ayarlar->getAyarlar();
+$ayarlarInstance = new Tayyip();
+$site_settings = $ayarlarInstance->getAyarlar();
 ?>
 
 <?php
@@ -13,42 +13,85 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
 
 <?php
 $urunUrl = isset($_GET['slug']) ? $_GET['slug'] : '';
-$urunler = new Tayyip();
-$itemu = $urunler->getUrunSlug($urunUrl);
+$urunInstance = new Tayyip();
+$itemu = $urunInstance->getUrunSlug($urunUrl);
+
+if (!$itemu) {
+    header("Location: /");
+    exit();
+}
+
+$meta_title = htmlspecialchars($itemu->baslik) . " | " . htmlspecialchars($site_settings->site_adi);
+$meta_description = !empty($itemu->kisa_aciklama) ? htmlspecialchars($itemu->kisa_aciklama) : htmlspecialchars($site_settings->site_desc);
+$meta_keywords = htmlspecialchars($itemu->baslik) . ', ' . htmlspecialchars($site_settings->site_keyw);
+// Add category to keywords if available:
+// if (!empty($itemu->kategori)) { $meta_keywords .= ', ' . htmlspecialchars($itemu->kategori); }
+
+
+$canonical_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/urunler/' . htmlspecialchars($itemu->urunUrl);
+$og_image_url = !empty($itemu->fotograf) ? rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($itemu->fotograf) : rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->logo); // Fallback to site logo
+$favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->favicon);
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
+    <?php if(isset($site_settings->analytic)) { echo $site_settings->analytic; } ?>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!-- Primary Meta Tags -->
-    <title><?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemu->baslik) ?></title>
+    <title><?php echo $meta_title; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemu->baslik) ?>">
+    <meta name="title" content="<?php echo $meta_title; ?>">
     <meta name="author" content="Tayyip Bölük">
-    <meta name="description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($item->site_keyw) ?>" />
-    <link rel="canonical" href="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta name="description" content="<?php echo $meta_description; ?>">
+    <meta name="keywords" content="<?php echo $meta_keywords; ?>" />
+    <link rel="canonical" href="<?php echo $canonical_url; ?>">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="Sebsite">
-    <meta property="og:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="og:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemu->baslik) ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="og:image" content="../images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="og:type" content="product">
+    <meta property="og:url" content="<?php echo $canonical_url; ?>">
+    <meta property="og:title" content="<?php echo htmlspecialchars($itemu->baslik); ?>">
+    <meta property="og:description" content="<?php echo $meta_description; ?>">
+    <meta property="og:image" content="<?php echo $og_image_url; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($site_settings->site_adi); ?>">
+    <?php
+    // Example product specific OG tags - uncomment and adapt if these fields exist in $itemu
+    // if(isset($itemu->price_amount) && isset($itemu->price_currency)){
+    //     echo '<meta property="product:price:amount" content="' . htmlspecialchars($itemu->price_amount) . '">';
+    //     echo '<meta property="product:price:currency" content="' . htmlspecialchars($itemu->price_currency) . '">';
+    // }
+    // if(isset($itemu->availability)){ // e.g., 'in stock', 'out of stock', 'preorder'
+    //     echo '<meta property="product:availability" content="' . htmlspecialchars($itemu->availability) . '">';
+    // }
+    ?>
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="twitter:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemu->baslik) ?>">
-    <meta property="twitter:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="twitter:image" content="./images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="twitter:url" content="<?php echo $canonical_url; ?>">
+    <meta property="twitter:title" content="<?php echo htmlspecialchars($itemu->baslik); ?>">
+    <meta property="twitter:description" content="<?php echo $meta_description; ?>">
+    <meta property="twitter:image" content="<?php echo $og_image_url; ?>">
+    <?php
+    // Example Twitter product card data - uncomment and adapt if these fields exist in $itemu
+    // if(isset($itemu->price_amount) && isset($itemu->price_currency)) {
+    //    echo '<meta name="twitter:data1" content="' . htmlspecialchars($itemu->price_amount) . ' ' . htmlspecialchars($itemu->price_currency) . '">';
+    //    echo '<meta name="twitter:label1" content="Price">';
+    // }
+    // if(isset($itemu->brand_name)){ // Assuming a brand name field
+    //    echo '<meta name="twitter:data2" content="' . htmlspecialchars($itemu->brand_name) . '">';
+    //    echo '<meta name="twitter:label2" content="Brand">';
+    // }
+    ?>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./images/<?php echo htmlspecialchars($item->favicon) ?>">
+    <link rel="icon" type="image/png" href="<?php echo $favicon_url; ?>">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
+
+    <?php if(!empty($itemu->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
 
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
@@ -58,7 +101,43 @@ $itemu = $urunler->getUrunSlug($urunUrl);
     <link type="text/css" href="../css/swipe.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
-
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "<?php echo htmlspecialchars($itemu->baslik); ?>",
+        "description": "<?php echo $meta_description; ?>",
+        <?php if(!empty($itemu->fotograf)): ?>
+        "image": "<?php echo $og_image_url; ?>",
+        <?php endif; ?>
+        "url": "<?php echo $canonical_url; ?>",
+        // "brand": { // Uncomment and populate if brand info is available
+        //    "@type": "Brand",
+        //    "name": "Your Brand Name or <?php echo htmlspecialchars($site_settings->site_adi); ?>"
+        // },
+        // "sku": "<?php echo htmlspecialchars($itemu->id); ?>", // Example SKU, use a real one if available
+        // "mpn": "<?php echo htmlspecialchars($itemu->id); ?>", // Example MPN
+        // "offers": { // Uncomment and populate if pricing and availability are available
+        //    "@type": "Offer",
+        //    "url": "<?php echo $canonical_url; ?>",
+        //    "priceCurrency": "TRY", // Change as needed
+        //    "price": "0.00", // Example price - make this dynamic
+        //    "itemCondition": "https://schema.org/NewCondition", // Or UsedCondition, etc.
+        //    "availability": "https://schema.org/InStock" // Or OutOfStock, PreOrder etc.
+        //    // "seller": {
+        //    //   "@type": "Organization", // Or Person
+        //    //   "name": "<?php echo htmlspecialchars($site_settings->site_adi); ?>"
+        //    // }
+        // },
+        <?php if(!empty($itemu->link) && filter_var($itemu->link, FILTER_VALIDATE_URL)): ?>
+        "potentialAction": { // Link to an external demo or purchase page
+            "@type": "ViewAction",
+            "target": "<?php echo htmlspecialchars($itemu->link); ?>"
+        },
+        <?php endif; ?>
+        "keywords": "<?php echo $meta_keywords; ?>"
+    }
+    </script>
 </head>
 
 <body>
@@ -152,11 +231,28 @@ $itemu = $urunler->getUrunSlug($urunUrl);
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 p-3">
-                    <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->baslik) ?>" class="img-fluid">
+                     <?php
+                        // $itemu is the product detail variable from the top of the file.
+                        // The $item variable later in the file is for $ayarlar.
+                        if (!empty($itemu->fotograf)) {
+                            $urun_img_filename = htmlspecialchars($itemu->fotograf);
+                            $urun_img_path = "../images/" . $urun_img_filename;
+                            $urun_img_webp_path = "../images/" . pathinfo($urun_img_filename, PATHINFO_FILENAME) . '.webp';
+                            $urun_file_extension = strtolower(pathinfo($urun_img_filename, PATHINFO_EXTENSION));
+                            $urun_mime_type = ($urun_file_extension == 'jpg' || $urun_file_extension == 'jpeg') ? 'image/jpeg' : (($urun_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                            <picture>
+                                <source srcset="<?php echo $urun_img_webp_path; ?>" type="image/webp">
+                                <source srcset="<?php echo $urun_img_path; ?>" type="<?php echo $urun_mime_type; ?>">
+                                <img src="<?php echo $urun_img_path; ?>" alt="<?php echo htmlspecialchars($itemu->baslik); ?>" class="img-fluid rounded shadow">
+                            </picture>
+                        <?php } else { ?>
+                            <img src="../images/default-product.jpg" alt="<?php echo htmlspecialchars($itemu->baslik); ?> için varsayılan görsel" class="img-fluid rounded shadow">
+                        <?php } ?>
                 </div>
                 <div class="col-lg-6 p-3">
-                    <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
-                    <div class="py-3"><a href="urunler/<?php echo htmlspecialchars($item->urunUrl) ?>" title="<?php echo htmlspecialchars($item->baslik) ?>" class="btn btn-dark mt-3 animate-up-2">
+                    <p><?php echo htmlspecialchars($itemu->kisa_aciklama); // Use $itemu for consistency ?></p>
+                    <div class="py-3"><a href="/urunler/<?php echo htmlspecialchars($itemu->urunUrl); ?>" title="<?php echo htmlspecialchars($itemu->baslik); ?>" class="btn btn-dark mt-3 animate-up-2">
                             Daha Fazla
                             <span class="icon icon-xs ml-2">
                                 <i class="fas fa-external-link-alt"></i>

@@ -2,8 +2,8 @@
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
 
-$ayarlar = new Tayyip();
-$item = $ayarlar->getAyarlar();
+$ayarlarInstance = new Tayyip(); // Renamed to avoid conflict
+$site_settings = $ayarlarInstance->getAyarlar(); // Global site settings
 ?>
 
 <?php
@@ -13,42 +13,61 @@ $logger->logTraffic(basename($_SERVER['PHP_SELF']));
 
 <?php
 $projeUrl = isset($_GET['slug']) ? $_GET['slug'] : '';
-$projeler = new Tayyip();
-$itemp = $projeler->getProjeSlug($projeUrl);
+$projelerInstance = new Tayyip(); // Renamed to avoid conflict
+$itemp = $projelerInstance->getProjeSlug($projeUrl); // Current project details
+
+// Fallback for meta description if project's short description is empty
+$meta_description = !empty($itemp->kisa_aciklama) ? htmlspecialchars($itemp->kisa_aciklama) : htmlspecialchars($site_settings->site_desc);
+// Keywords could be project category, technologies, or site keywords
+$meta_keywords = !empty($itemp->teknoloji) ? htmlspecialchars($itemp->teknoloji) : htmlspecialchars($site_settings->site_keyw);
+if (!empty($itemp->kategori)) {
+    $meta_keywords .= ', ' . htmlspecialchars($itemp->kategori);
+}
+
+$canonical_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/proje/' . htmlspecialchars($itemp->projeUrl);
+$og_image_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($itemp->fotograf);
+$favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images/' . htmlspecialchars($site_settings->favicon);
+
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
 
 <head>
+    <?php echo $site_settings->analytic; // Include analytics code ?>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!-- Primary Meta Tags -->
-    <title><?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemp->proje) ?></title>
+    <title><?php echo htmlspecialchars($itemp->proje); ?> | <?php echo htmlspecialchars($site_settings->site_adi); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemp->proje) ?>">
+    <meta name="title" content="<?php echo htmlspecialchars($itemp->proje); ?> | <?php echo htmlspecialchars($site_settings->site_adi); ?>">
     <meta name="author" content="Tayyip Bölük">
-    <meta name="description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($item->site_keyw) ?>" />
-    <link rel="canonical" href="<?php echo htmlspecialchars($item->site_url) ?>">
+    <meta name="description" content="<?php echo $meta_description; ?>">
+    <meta name="keywords" content="<?php echo $meta_keywords; ?>" />
+    <link rel="canonical" href="<?php echo $canonical_url; ?>">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="Sebsite">
-    <meta property="og:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="og:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemp->proje) ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="og:image" content="../images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="og:type" content="object"> {/* Could be "article" or a more specific type if applicable */}
+    <meta property="og:url" content="<?php echo $canonical_url; ?>">
+    <meta property="og:title" content="<?php echo htmlspecialchars($itemp->proje); ?>">
+    <meta property="og:description" content="<?php echo $meta_description; ?>">
+    <meta property="og:image" content="<?php echo $og_image_url; ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($site_settings->site_adi); ?>">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="<?php echo htmlspecialchars($item->site_url) ?>">
-    <meta property="twitter:title" content="<?php echo htmlspecialchars($item->site_adi) ?> | <?php echo htmlspecialchars($itemp->proje) ?>">
-    <meta property="twitter:description" content="<?php echo htmlspecialchars($item->site_desc) ?>">
-    <meta property="twitter:image" content="./images/<?php echo htmlspecialchars($item->logo) ?>">
+    <meta property="twitter:url" content="<?php echo $canonical_url; ?>">
+    <meta property="twitter:title" content="<?php echo htmlspecialchars($itemp->proje); ?>">
+    <meta property="twitter:description" content="<?php echo $meta_description; ?>">
+    <meta property="twitter:image" content="<?php echo $og_image_url; ?>">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./images/<?php echo htmlspecialchars($item->favicon) ?>">
+    <link rel="icon" type="image/png" href="<?php echo $favicon_url; ?>">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
+
+    <?php if(!empty($itemp->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
 
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
@@ -58,7 +77,35 @@ $itemp = $projeler->getProjeSlug($projeUrl);
     <link type="text/css" href="../css/swipe.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
-    <!-- NOTICE: You can use the _analytics.html partial to include production code specific code & trackers -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CreativeWork", // Or a more specific type like SoftwareApplication, Product, etc.
+        "name": "<?php echo htmlspecialchars($itemp->proje); ?>",
+        "description": "<?php echo $meta_description; ?>",
+        <?php if(!empty($itemp->fotograf)): ?>
+        "image": "<?php echo $og_image_url; ?>",
+        <?php endif; ?>
+        "url": "<?php echo $canonical_url; ?>",
+        "author": {
+            "@type": "Person",
+            "name": "Tayyip Bölük" // Assuming author is Tayyip Bölük
+        },
+        // "datePublished": "YYYY-MM-DD", // Add if you have a publication date for projects
+        <?php if(!empty($itemp->kategori)): ?>
+        "genre": "<?php echo htmlspecialchars($itemp->kategori); ?>",
+        <?php endif; ?>
+        <?php if(!empty($itemp->teknoloji)): ?>
+        "keywords": "<?php echo htmlspecialchars($itemp->teknoloji); ?>", // Using teknoloji as keywords
+        <?php endif; ?>
+        <?php if(!empty($itemp->link) && filter_var($itemp->link, FILTER_VALIDATE_URL)): ?>
+        "potentialAction": {
+            "@type": "ViewAction",
+            "target": "<?php echo htmlspecialchars($itemp->link); ?>"
+        }
+        <?php endif; ?>
+    }
+    </script>
 
 </head>
 
@@ -153,18 +200,31 @@ $itemp = $projeler->getProjeSlug($projeUrl);
         <div class="container">
             <div class="row">
                 <div class="col-lg-4 p-3">
-                    <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->proje) ?>" class="img-fluid">
+                    <?php
+                        $proj_main_image_filename = htmlspecialchars($item->fotograf); // $item is $itemp from top of file
+                        $proj_main_image_path = "../images/" . $proj_main_image_filename;
+                        $proj_main_image_webp_path = "../images/" . pathinfo($proj_main_image_filename, PATHINFO_FILENAME) . '.webp';
+                        $proj_main_file_extension = strtolower(pathinfo($proj_main_image_filename, PATHINFO_EXTENSION));
+                        $proj_main_mime_type = ($proj_main_file_extension == 'jpg' || $proj_main_file_extension == 'jpeg') ? 'image/jpeg' : (($proj_main_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                    ?>
+                    <picture>
+                        <source srcset="<?php echo $proj_main_image_webp_path; ?>" type="image/webp">
+                        <source srcset="<?php echo $proj_main_image_path; ?>" type="<?php echo $proj_main_mime_type; ?>">
+                        <img src="<?php echo $proj_main_image_path; ?>" alt="<?php echo htmlspecialchars($item->proje); ?>" class="img-fluid">
+                    </picture>
                 </div>
                 <div class="col-lg-8 p-3 align-items-center">
                     <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
                     <p><?php echo htmlspecialchars($item->teknoloji) ?></p>
                     <div class="mt-4">
-                        <a href="<?php echo htmlspecialchars($item->link) ?>" target="_blank" title="<?php echo htmlspecialchars($item->proje) ?>" class="btn btn-tertiary text-white mt-3 ml-2 animate-up-2">
+                        <?php if (!empty($item->link)): ?>
+                        <a href="<?php echo htmlspecialchars($item->link); ?>" target="_blank" title="<?php echo htmlspecialchars($item->proje); ?>" class="btn btn-tertiary text-white mt-3 ml-2 animate-up-2">
                             İncele
                             <span class="icon icon-xs ml-2">
                                 <i class="far fa-eye"></i>
                             </span>
                         </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
