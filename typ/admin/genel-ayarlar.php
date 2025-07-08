@@ -23,8 +23,11 @@ $_SESSION['LAST_ACTIVITY'] = time();
 <?php
 include '../controllers/baglanti.php';
 include '../controllers/islem.php';
+require_once __DIR__ . '/../helpers/upload_utils.php'; // Include the new utility file
 
-include "admin-partials/_header.php"
+include "admin-partials/_header.php";
+
+use Typ\Helpers; // Use the namespace
 ?>
 
 <?php
@@ -32,142 +35,91 @@ $ayarlar = new Tayyip();
 $item = $ayarlar->getAyarlar();
 
 if (isset($_POST["submit"])) {
-    $site_adi = $_POST["site_adi"];
-    $site_desc = $_POST["site_desc"];
-    $site_keyw = $_POST["site_keyw"];
-
-    // Dosya yükleme işlemleri
-    $uploadDir = '../images/';
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webp', 'image/ico', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon'];
-    $maxFileSize = 5 * 1024 * 1024; // 5MB
-
-    $logo = $_FILES['logo'];
-    $favicon = $_FILES['favicon'];
-
-    $errors = [];
+    $errors = []; // Initialize errors array
     $success = "";
 
-    // Dosya türü ve boyutu kontrolü
-    function isValidFile($file, $allowedTypes, $maxFileSize, &$errors)
-    {
-        if (!in_array($file['type'], $allowedTypes)) {
-            $errors[] = "Geçersiz dosya türü: " . $file['name'];
-            return false;
-        }
-        if ($file['size'] > $maxFileSize) {
-            $errors[] = "Dosya çok büyük: " . $file['name'];
-            return false;
-        }
-        return true;
+    // Retrieve raw POST data
+    $site_adi_raw = $_POST["site_adi"] ?? '';
+    $site_desc_raw = $_POST["site_desc"] ?? '';
+    $site_keyw_raw = $_POST["site_keyw"] ?? '';
+
+    // Validation
+    if (empty(trim($site_adi_raw))) {
+        $errors[] = "Site adı boş bırakılamaz.";
+    }
+    if (empty(trim($site_desc_raw))) {
+        $errors[] = "Site açıklaması boş bırakılamaz.";
+    }
+    if (empty(trim($site_keyw_raw))) {
+        $errors[] = "Site anahtar kelimeleri boş bırakılamaz.";
+    }
+    // Optional: Max length checks
+    if (mb_strlen(trim($site_adi_raw)) > 100) { // Example length
+        $errors[] = "Site adı 100 karakterden uzun olamaz.";
+    }
+    if (mb_strlen(trim($site_desc_raw)) > 255) { // Example length
+        $errors[] = "Site açıklaması 255 karakterden uzun olamaz.";
+    }
+    if (mb_strlen(trim($site_keyw_raw)) > 255) { // Example length
+        $errors[] = "Site anahtar kelimeleri 255 karakterden uzun olamaz.";
     }
 
-    // Dosya adı oluşturma fonksiyonu
-    function generateFileName($site_adi)
-    {
-        $counterFile = 'counter.txt';
-        if (!file_exists($counterFile)) {
-            file_put_contents($counterFile, '0');
-        }
+    // Proceed only if initial validation passes
+    if (empty($errors)) {
+        // Sanitization
+        $site_adi_sanitized = htmlspecialchars(trim($site_adi_raw), ENT_QUOTES, 'UTF-8');
+        $site_desc_sanitized = htmlspecialchars(trim($site_desc_raw), ENT_QUOTES, 'UTF-8');
+        $site_keyw_sanitized = htmlspecialchars(trim($site_keyw_raw), ENT_QUOTES, 'UTF-8');
 
-        $counter = (int)file_get_contents($counterFile);
-        $counter++;
-        file_put_contents($counterFile, $counter);
+        // File upload settings
+        $uploadDir = '../images/'; 
+        $allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 
+            'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon'
+        ];
+        $maxFileSize = 5 * 1024 * 1024; // 5MB
 
-        // Dosya adında kullanılabilir karakterleri ve boşlukları _ ile değiştirme
-        $cleanedAyar = preg_replace("/[^a-zA-Z0-9\_\-]/", "_", strtolower($site_adi));
-        // Dosya adını oluştur
-        $fileName = $cleanedAyar . '_' . $counter . '.webp';
-        return $fileName;
-    }
+        $logo = $_FILES['logo'];
+        $favicon = $_FILES['favicon'];
 
-    // Resim dosyasını webp formatına dönüştürme fonksiyonu
-    function convertToWebp($sourcePath, $destinationPath)
-    {
-        $info = getimagesize($sourcePath);
-        $mime = $info['mime'];
+        $logoNewName = $item->logo; // Default to existing logo
+        $faviconNewName = $item->favicon; // Default to existing favicon
 
-        switch ($mime) {
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($sourcePath);
-                break;
-            case 'image/png':
-                $image = imagecreatefrompng($sourcePath);
-                break;
-            case 'image/webp':
-                $image = imagecreatefromwebp($sourcePath);
-                break;
-            case 'image/gif':
-                $image = imagecreatefromgif($sourcePath);
-                break;
-            default:
-                return false;
-        }
-
-        imagewebp($image, $destinationPath);
-        imagedestroy($image);
-        return true;
-    }
-
-    // Dosya yükleme ve işleme
-    function processFileUpload($file, $site_adi, $uploadDir, $allowedTypes, $maxFileSize, &$errors)
-    {
-        if (isValidFile($file, $allowedTypes, $maxFileSize, $errors)) {
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+        // Process logo upload
+        if (!empty($logo['name']) && $logo['error'] == UPLOAD_ERR_OK) {
+            $uploadedLogoName = Helpers\processFileUpload($logo, $site_adi_sanitized . "_logo", $uploadDir, $allowedTypes, $maxFileSize, $errors);
+            if ($uploadedLogoName) {
+                $logoNewName = $uploadedLogoName;
             }
+        } elseif (!empty($logo['name']) && $logo['error'] !== UPLOAD_ERR_NO_FILE) {
+            // File was provided but an error occurred (other than no file)
+            $errors[] = "Logo yüklenirken bir hata oluştu: " . $logo['name'] . " (Hata kodu: " . $logo['error'] . ")";
+        }
 
-            $fileType = $file['type'];
-            $fileName = generateFileName($site_adi);
-
-            if ($fileType === 'image/svg+xml' || $fileType === 'image/x-icon' || $fileType === 'image/vnd.microsoft.icon') {
-                // SVG veya ICO dosyasını doğrudan taşı
-                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $destinationPath = $uploadDir . pathinfo($file['name'], PATHINFO_FILENAME) . '.' . $extension;
-                if (move_uploaded_file($file['tmp_name'], $destinationPath)) {
-                    return pathinfo($file['name'], PATHINFO_FILENAME) . '.' . $extension;
-                } else {
-                    $errors[] = "SVG veya ICO dosyası taşınırken bir hata oluştu: " . $file['name'];
-                    return false;
+        // Process favicon upload (only if no errors so far from text validation or logo upload)
+        if (empty($errors)) {
+            if (!empty($favicon['name']) && $favicon['error'] == UPLOAD_ERR_OK) {
+                $uploadedFaviconName = Helpers\processFileUpload($favicon, $site_adi_sanitized . "_favicon", $uploadDir, $allowedTypes, $maxFileSize, $errors);
+                if ($uploadedFaviconName) {
+                    $faviconNewName = $uploadedFaviconName;
                 }
+            } elseif (!empty($favicon['name']) && $favicon['error'] !== UPLOAD_ERR_NO_FILE) {
+                // File was provided but an error occurred
+                $errors[] = "Favicon yüklenirken bir hata oluştu: " . $favicon['name'] . " (Hata kodu: " . $favicon['error'] . ")";
+            }
+        }
+
+        // Proceed with database update only if all validations and file uploads (if any) were successful
+        if (empty($errors)) {
+            if ($ayarlar->editGenelAyarlar($site_adi_sanitized, $site_desc_sanitized, $site_keyw_sanitized, $logoNewName, $faviconNewName)) {
+                $success = "Ayarlar başarıyla güncellendi.";
             } else {
-                // Geçici dosya yolları
-                $tmpPath = $uploadDir . 'temp_' . uniqid() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
-                if (move_uploaded_file($file['tmp_name'], $tmpPath)) {
-                    $destinationPath = $uploadDir . $fileName;
-                    if (convertToWebp($tmpPath, $destinationPath)) {
-                        unlink($tmpPath);
-                        return $fileName;
-                    } else {
-                        $errors[] = "Dosya webp formatına dönüştürülürken bir hata oluştu: " . $file['name'];
-                        return false;
-                    }
-                } else {
-                    $errors[] = "Dosya geçici olarak taşınırken bir hata oluştu: " . $file['name'];
-                    return false;
-                }
+                $errors[] = "Ayarlar güncellenirken bir veritabanı hatası oluştu.";
             }
         }
-        return false;
     }
 
-    $logoNewName = $item->logo;
-    $faviconNewName = $item->favicon;
-
-    if (!empty($logo['name'])) {
-        $uploadedFileName = processFileUpload($logo, $site_adi, $uploadDir, $allowedTypes, $maxFileSize, $errors);
-        if ($uploadedFileName) {
-            $logoNewName = $uploadedFileName;
-        }
-    }
-
-    if (!empty($favicon['name'])) {
-        $uploadedFileName = processFileUpload($favicon, $site_adi, $uploadDir, $allowedTypes, $maxFileSize, $errors);
-        if ($uploadedFileName) {
-            $faviconNewName = $uploadedFileName;
-        }
-    }
-
-    // Hataları ve başarı mesajını göster
+    // Display errors or success message
     if (!empty($errors)) {
         foreach ($errors as $error) {
             echo '
@@ -182,34 +134,13 @@ if (isset($_POST["submit"])) {
                 </div>
             </div>';
         }
-    } else {
-        if ($ayarlar->editGenelAyarlar($site_adi, $site_desc, $site_keyw, $logoNewName, $faviconNewName)) {
-            echo '
-            <div class="bs-toast toast toast-placement-ex m-2 top-0 end-0 fade show bg-success" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <i class="bx bx-bell me-2"></i>
-                    <div class="me-auto fw-medium">Başarılı</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    Ayarlar başarıyla güncellendi.
-                </div>
-            </div>';
-            echo '<script>window.location.href = "genel-ayarlar.php";</script>';
-            exit();
-        } else {
-            echo '
-            <div class="bs-toast toast fade show bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <i class="bx bx-bell me-2"></i>
-                    <div class="me-auto fw-medium">Hata</div>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    Ayarlar güncellenirken bir hata oluştu.
-                </div>
-            </div>';
-        }
+    } elseif (!empty($success)) { // Ensure $success is not empty for success message
+        // The success message ($success) is set, but will not be displayed on this page
+        // due to the immediate header redirect.
+        // Consider using session flash messages to display the success message on the target page (genel-ayarlar.php).
+        // For example, $_SESSION['flash_message'] = $success;
+        header("Location: genel-ayarlar.php");
+        exit();
     }
 }
 ?>
