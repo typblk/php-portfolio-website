@@ -203,42 +203,71 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
         </div>
     </section>
 
-    <section>
+    <section class="section section-sm service-detail-section">
         <div class="container">
             <div class="row">
-                <div class="col-lg-6 p-3">
-                    <?php
-                        // Note: $itemh is the service detail variable from the top of the file.
-                        // The $item variable inside this section was re-fetched for footer,
-                        // ensure we are using $itemh for the service image.
-                        // The original code here uses $item->fotograf which might be from $ayarlar->getAyarlar() if $item was reassigned.
-                        // Assuming $itemh is the correct context for the service image:
-                        if (!empty($itemh->fotograf)) {
-                            $hizmet_img_filename = htmlspecialchars($itemh->fotograf);
-                            $hizmet_img_path = "../images/" . $hizmet_img_filename;
-                            $hizmet_img_webp_path = "../images/" . pathinfo($hizmet_img_filename, PATHINFO_FILENAME) . '.webp';
-                            $hizmet_file_extension = strtolower(pathinfo($hizmet_img_filename, PATHINFO_EXTENSION));
-                            $hizmet_mime_type = ($hizmet_file_extension == 'jpg' || $hizmet_file_extension == 'jpeg') ? 'image/jpeg' : (($hizmet_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
-                        ?>
+                <div class="col-12">
+                    <?php if (!empty($itemh->fotograf)):
+                        $hizmet_img_filename = htmlspecialchars($itemh->fotograf);
+                        $hizmet_img_path = "../images/" . $hizmet_img_filename;
+                        $hizmet_img_webp_path = "../images/" . pathinfo($hizmet_img_filename, PATHINFO_FILENAME) . '.webp';
+                        $hizmet_file_extension = strtolower(pathinfo($hizmet_img_filename, PATHINFO_EXTENSION));
+                        $hizmet_mime_type = ($hizmet_file_extension == 'jpg' || $hizmet_file_extension == 'jpeg') ? 'image/jpeg' : (($hizmet_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                    ?>
+                        <div class="service-image-container float-lg-left mr-lg-4 mb-3"> {/* float-lg-left for desktop, stack on mobile */}
                             <picture>
                                 <source srcset="<?php echo $hizmet_img_webp_path; ?>" type="image/webp">
                                 <source srcset="<?php echo $hizmet_img_path; ?>" type="<?php echo $hizmet_mime_type; ?>">
-                                <img src="<?php echo $hizmet_img_path; ?>" alt="<?php echo htmlspecialchars($itemh->hizmet); ?>" class="img-fluid rounded shadow">
+                                <img src="<?php echo $hizmet_img_path; ?>" alt="<?php echo htmlspecialchars($itemh->hizmet); ?>" class="img-fluid rounded shadow service-image">
                             </picture>
-                        <?php } else { ?>
-                            <!-- Placeholder for when no image is available -->
-                            <img src="../images/default-service.jpg" alt="<?php echo htmlspecialchars($itemh->hizmet); ?> için varsayılan görsel" class="img-fluid rounded shadow">
-                        <?php } ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="service-content">
+                        <?php if (!empty($itemh->kisa_aciklama)): ?>
+                            <p class="lead"><?php echo htmlspecialchars($itemh->kisa_aciklama); ?></p>
+                            <hr>
+                        <?php endif; ?>
+
+                        <?php
+                        // Assuming $itemh->aciklama might contain HTML content from a WYSIWYG editor.
+                        // If it's plain text, htmlspecialchars() would be appropriate.
+                        // For this example, I'm outputting it directly. Sanitize if needed.
+                        if (!empty($itemh->aciklama)) {
+                            echo '<div>' . $itemh->aciklama . '</div>';
+                        } else {
+                            echo '<p>Bu hizmet hakkında detaylı bilgi yakında eklenecektir.</p>';
+                        }
+                        ?>
+                    </div>
                 </div>
-                <div class="col-lg-6 p-3">
-                    <p><?php echo htmlspecialchars($itemh->kisa_aciklama); // Use $itemh here as well for consistency ?></p>
-                </div>
-            </div>
-            <div class="py-4">
-                <p><?php echo htmlspecialchars($item->aciklama) ?>.</p>
             </div>
         </div>
     </section>
+
+    <style>
+    .service-image-container {
+        max-width: 400px; /* Adjust as needed, or use col-lg-X classes */
+        /* On mobile (Bootstrap < lg breakpoint), float is off, image is block */
+    }
+    @media (min-width: 992px) { /* lg breakpoint */
+        .service-image-container.float-lg-left {
+            float: left;
+            margin-right: 20px; /* Spacing between image and text */
+            margin-bottom: 10px; /* Spacing below image before text wraps fully */
+        }
+        .service-content {
+            overflow: hidden; /* To contain the text flow around the float */
+        }
+    }
+    .service-content p:first-child {
+        margin-top: 0;
+    }
+    .service-content div { /* If aciklama is wrapped in a div */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+    </style>
 
     <?php
 
