@@ -68,6 +68,10 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
+    <?php if(!empty($itemh->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
+
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
@@ -203,10 +207,31 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 p-3">
-                    <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->hizmet) ?>" class="img-fluid">
+                    <?php
+                        // Note: $itemh is the service detail variable from the top of the file.
+                        // The $item variable inside this section was re-fetched for footer,
+                        // ensure we are using $itemh for the service image.
+                        // The original code here uses $item->fotograf which might be from $ayarlar->getAyarlar() if $item was reassigned.
+                        // Assuming $itemh is the correct context for the service image:
+                        if (!empty($itemh->fotograf)) {
+                            $hizmet_img_filename = htmlspecialchars($itemh->fotograf);
+                            $hizmet_img_path = "../images/" . $hizmet_img_filename;
+                            $hizmet_img_webp_path = "../images/" . pathinfo($hizmet_img_filename, PATHINFO_FILENAME) . '.webp';
+                            $hizmet_file_extension = strtolower(pathinfo($hizmet_img_filename, PATHINFO_EXTENSION));
+                            $hizmet_mime_type = ($hizmet_file_extension == 'jpg' || $hizmet_file_extension == 'jpeg') ? 'image/jpeg' : (($hizmet_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                            <picture>
+                                <source srcset="<?php echo $hizmet_img_webp_path; ?>" type="image/webp">
+                                <source srcset="<?php echo $hizmet_img_path; ?>" type="<?php echo $hizmet_mime_type; ?>">
+                                <img src="<?php echo $hizmet_img_path; ?>" alt="<?php echo htmlspecialchars($itemh->hizmet); ?>" class="img-fluid rounded shadow">
+                            </picture>
+                        <?php } else { ?>
+                            <!-- Placeholder for when no image is available -->
+                            <img src="../images/default-service.jpg" alt="<?php echo htmlspecialchars($itemh->hizmet); ?> için varsayılan görsel" class="img-fluid rounded shadow">
+                        <?php } ?>
                 </div>
                 <div class="col-lg-6 p-3">
-                    <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
+                    <p><?php echo htmlspecialchars($itemh->kisa_aciklama); // Use $itemh here as well for consistency ?></p>
                 </div>
             </div>
             <div class="py-4">

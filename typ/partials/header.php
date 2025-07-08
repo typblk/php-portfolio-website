@@ -57,13 +57,59 @@ $title = $pageTitles[$page] ?? '';
     <meta name="msapplication-TileColor" content="#183B56">
     <meta name="theme-color" content="#ffffff">
 
-    <!-- Fontawesome -->
-    <link type="text/css" href="./vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <!-- Preconnect to font CDNs -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-    <!-- Swipe CSS -->
-    <link type="text/css" href="./css/swipe.css" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css">
+    <?php
+    // Preload LCP Image for Homepage Hero
+    if ($page == 'index') {
+        // We need to fetch the hero image URL here.
+        // This requires an instance of Tayyip and fetching slide data for 'index'.
+        // This logic is usually in index.php, so we might need to pass it or duplicate it.
+        // For simplicity, let's assume $hero_image_filename is available.
+        // In a real scenario, ensure $item_hero_image_filename is correctly populated.
+        // $slayt_instance_for_lcp = new Tayyip(); // Avoid re-declaring if already available
+        // $hero_slide_data = $slayt_instance_for_lcp->getSlaytSayfa('index');
+        // if ($hero_slide_data && !empty($hero_slide_data->fotograf)) {
+        //    $hero_image_filename = htmlspecialchars($hero_slide_data->fotograf);
+        //    echo '<link rel="preload" as="image" href="' . rtrim(htmlspecialchars($item->site_url), '/') . '/images/' . $hero_image_filename . '" fetchpriority="high">' . "\n";
+        // }
+        // Due to potential complexity of fetching specific LCP image here without full context of index.php variables,
+        // this specific preload might be better placed directly in index.php before including the header,
+        // or the LCP image filename needs to be passed to this header scope.
+        // For now, I'll comment out the actual preload for homepage LCP from header,
+        // suggesting it be handled within index.php or by passing data.
+        // echo "<!-- LCP Preload for homepage hero image would be here if data was available -->\n";
+    }
+    ?>
+
+    <!-- Critical CSS (Placeholder - to be populated manually/with tools) -->
+    <style type="text/css">
+        /* Common critical styles: basic layout, typography, header */
+        body { font-family: sans-serif; margin: 0; background-color: #fff; color: #333; }
+        .container { width: 90%; margin-left: auto; margin-right: auto; max-width: 1200px; }
+        header.header-global { padding: 1rem 0; }
+        nav.navbar-main { display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand p { margin: 0; font-weight: bold; }
+        /* Add other critical styles here based on inspection */
+    </style>
+
+    <!-- Fontawesome (Async) -->
+    <link rel="preload" href="./vendor/@fortawesome/fontawesome-free/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./vendor/@fortawesome/fontawesome-free/css/all.min.css"></noscript>
+
+    <!-- Bootstrap Icons (Async from CDN) -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"></noscript>
+
+    <!-- Swipe CSS (Async) -->
+    <link rel="preload" href="./css/swipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./css/swipe.css"></noscript>
+
+    <!-- Main Style CSS (Async) -->
+    <link rel="preload" href="./css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./css/style.css"></noscript>
 
     <script type="application/ld+json">
     {

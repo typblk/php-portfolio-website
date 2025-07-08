@@ -59,6 +59,10 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
+    <?php if(!empty($itemb->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
+
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
@@ -194,7 +198,18 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
             <div class="row mb-5">
                 <div class="col-lg-9 pr-3">
                     <div class="">
-                        <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" class="img-fluid py-3" alt="<?php echo htmlspecialchars($item->baslik) ?>">
+                        <?php
+                            $blog_main_image_filename = htmlspecialchars($item->fotograf); // $item is $itemb from the top of the file for blog details
+                            $blog_main_image_path = "../images/" . $blog_main_image_filename;
+                            $blog_main_image_webp_path = "../images/" . pathinfo($blog_main_image_filename, PATHINFO_FILENAME) . '.webp';
+                            $blog_main_file_extension = strtolower(pathinfo($blog_main_image_filename, PATHINFO_EXTENSION));
+                            $blog_main_mime_type = ($blog_main_file_extension == 'jpg' || $blog_main_file_extension == 'jpeg') ? 'image/jpeg' : (($blog_main_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                        <picture>
+                            <source srcset="<?php echo $blog_main_image_webp_path; ?>" type="image/webp">
+                            <source srcset="<?php echo $blog_main_image_path; ?>" type="<?php echo $blog_main_mime_type; ?>">
+                            <img src="<?php echo $blog_main_image_path; ?>" class="img-fluid py-3" alt="<?php echo htmlspecialchars($item->baslik); ?>">
+                        </picture>
                         <div class="bg-white border-0 pb-3">
                             <span class="small text-gray-600 mr-2"><i class="bi bi-person mr-1"></i>Tayyip Bölük</span>
                             <span class="small text-gray-600 mr-2">
@@ -225,11 +240,24 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
                     <ul class="list-unstyled pt-3 pb-5">
                         <?php
                         $bloglar = new Tayyip();
-                        foreach ($bloglar->getBlogA() as $item) :
+                        foreach ($bloglar->getBlogA() as $item) : // Here $item refers to the loop variable for recent blogs
                         ?>
                             <li>
                                 <a href="/bloglar/<?php echo htmlspecialchars($item->blogUrl) ?>" title="<?php echo htmlspecialchars($item->baslik) ?>" class="text-decoration-none row">
-                                    <span class="col-4 p-2"><img src="images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->baslik) ?>" class="img-fluid"></span>
+                                    <span class="col-4 p-2">
+                                        <?php
+                                            $recent_blog_img_filename = htmlspecialchars($item->fotograf);
+                                            $recent_blog_img_path = "../images/" . $recent_blog_img_filename; // Corrected path relative to typ/bloglar/
+                                            $recent_blog_img_webp_path = "../images/" . pathinfo($recent_blog_img_filename, PATHINFO_FILENAME) . '.webp';
+                                            $recent_blog_file_extension = strtolower(pathinfo($recent_blog_img_filename, PATHINFO_EXTENSION));
+                                            $recent_blog_mime_type = ($recent_blog_file_extension == 'jpg' || $recent_blog_file_extension == 'jpeg') ? 'image/jpeg' : (($recent_blog_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                                        ?>
+                                        <picture>
+                                            <source srcset="<?php echo $recent_blog_img_webp_path; ?>" type="image/webp">
+                                            <source srcset="<?php echo $recent_blog_img_path; ?>" type="<?php echo $recent_blog_mime_type; ?>">
+                                            <img src="<?php echo $recent_blog_img_path; ?>" alt="<?php echo htmlspecialchars($item->baslik); ?>" class="img-fluid">
+                                        </picture>
+                                    </span>
                                     <span class="col-8 p-2 align-item-center">
                                         <h5><?php echo htmlspecialchars($item->baslik) ?></h5>
                                     </span>

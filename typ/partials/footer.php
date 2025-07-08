@@ -92,20 +92,20 @@ $item = $ayarlar->getAyarlar();
 </footer>
 
 <!-- Core -->
-<script src="./vendor/popper.js/dist/umd/popper.min.js"></script>
-<script src="./vendor/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="./vendor/headroom.js/dist/headroom.min.js"></script>
+<script src="./vendor/popper.js/dist/umd/popper.min.js" defer></script>
+<script src="./vendor/bootstrap/dist/js/bootstrap.min.js" defer></script>
+<script src="./vendor/headroom.js/dist/headroom.min.js" defer></script>
 
 <!-- Vendor JS -->
-<script src="./vendor/onscreen/dist/on-screen.umd.min.js"></script>
-<script src="./vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js"></script>
+<script src="./vendor/onscreen/dist/on-screen.umd.min.js" defer></script>
+<script src="./vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js" defer></script>
 
-<script src="vendor/isotope/imagesload.pkgd.min.js"></script>
+<script src="./vendor/isotope/imagesload.pkgd.min.js" defer></script> {/* Corrected path to be consistent */}
 
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 
 <!-- Swipe JS -->
-<script src="./assets/js/swipe.js"></script>
+<script src="./assets/js/swipe.js" defer></script>
 
 </body>
 

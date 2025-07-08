@@ -89,6 +89,10 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
+    <?php if(!empty($itemu->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
+
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
@@ -227,11 +231,28 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 p-3">
-                    <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->baslik) ?>" class="img-fluid">
+                     <?php
+                        // $itemu is the product detail variable from the top of the file.
+                        // The $item variable later in the file is for $ayarlar.
+                        if (!empty($itemu->fotograf)) {
+                            $urun_img_filename = htmlspecialchars($itemu->fotograf);
+                            $urun_img_path = "../images/" . $urun_img_filename;
+                            $urun_img_webp_path = "../images/" . pathinfo($urun_img_filename, PATHINFO_FILENAME) . '.webp';
+                            $urun_file_extension = strtolower(pathinfo($urun_img_filename, PATHINFO_EXTENSION));
+                            $urun_mime_type = ($urun_file_extension == 'jpg' || $urun_file_extension == 'jpeg') ? 'image/jpeg' : (($urun_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                        ?>
+                            <picture>
+                                <source srcset="<?php echo $urun_img_webp_path; ?>" type="image/webp">
+                                <source srcset="<?php echo $urun_img_path; ?>" type="<?php echo $urun_mime_type; ?>">
+                                <img src="<?php echo $urun_img_path; ?>" alt="<?php echo htmlspecialchars($itemu->baslik); ?>" class="img-fluid rounded shadow">
+                            </picture>
+                        <?php } else { ?>
+                            <img src="../images/default-product.jpg" alt="<?php echo htmlspecialchars($itemu->baslik); ?> için varsayılan görsel" class="img-fluid rounded shadow">
+                        <?php } ?>
                 </div>
                 <div class="col-lg-6 p-3">
-                    <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
-                    <div class="py-3"><a href="urunler/<?php echo htmlspecialchars($item->urunUrl) ?>" title="<?php echo htmlspecialchars($item->baslik) ?>" class="btn btn-dark mt-3 animate-up-2">
+                    <p><?php echo htmlspecialchars($itemu->kisa_aciklama); // Use $itemu for consistency ?></p>
+                    <div class="py-3"><a href="/urunler/<?php echo htmlspecialchars($itemu->urunUrl); ?>" title="<?php echo htmlspecialchars($itemu->baslik); ?>" class="btn btn-dark mt-3 animate-up-2">
                             Daha Fazla
                             <span class="icon icon-xs ml-2">
                                 <i class="fas fa-external-link-alt"></i>

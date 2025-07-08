@@ -65,6 +65,10 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
+    <?php if(!empty($itemp->fotograf)): ?>
+    <link rel="preload" href="<?php echo $og_image_url; ?>" as="image" fetchpriority="high">
+    <?php endif; ?>
+
     <!-- Fontawesome -->
     <link type="text/css" href="../vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
@@ -196,7 +200,18 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
         <div class="container">
             <div class="row">
                 <div class="col-lg-4 p-3">
-                    <img src="../images/<?php echo htmlspecialchars($item->fotograf) ?>" alt="<?php echo htmlspecialchars($item->proje) ?>" class="img-fluid">
+                    <?php
+                        $proj_main_image_filename = htmlspecialchars($item->fotograf); // $item is $itemp from top of file
+                        $proj_main_image_path = "../images/" . $proj_main_image_filename;
+                        $proj_main_image_webp_path = "../images/" . pathinfo($proj_main_image_filename, PATHINFO_FILENAME) . '.webp';
+                        $proj_main_file_extension = strtolower(pathinfo($proj_main_image_filename, PATHINFO_EXTENSION));
+                        $proj_main_mime_type = ($proj_main_file_extension == 'jpg' || $proj_main_file_extension == 'jpeg') ? 'image/jpeg' : (($proj_main_file_extension == 'png') ? 'image/png' : 'image/octet-stream');
+                    ?>
+                    <picture>
+                        <source srcset="<?php echo $proj_main_image_webp_path; ?>" type="image/webp">
+                        <source srcset="<?php echo $proj_main_image_path; ?>" type="<?php echo $proj_main_mime_type; ?>">
+                        <img src="<?php echo $proj_main_image_path; ?>" alt="<?php echo htmlspecialchars($item->proje); ?>" class="img-fluid">
+                    </picture>
                 </div>
                 <div class="col-lg-8 p-3 align-items-center">
                     <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
