@@ -217,12 +217,14 @@ $favicon_url = rtrim(htmlspecialchars($site_settings->site_url), '/') . '/images
                     <p><?php echo htmlspecialchars($item->kisa_aciklama) ?></p>
                     <p><?php echo htmlspecialchars($item->teknoloji) ?></p>
                     <div class="mt-4">
-                        <a href="<?php echo htmlspecialchars($item->link) ?>" target="_blank" title="<?php echo htmlspecialchars($item->proje) ?>" class="btn btn-tertiary text-white mt-3 ml-2 animate-up-2">
+                        <?php if (!empty($item->link)): ?>
+                        <a href="<?php echo htmlspecialchars($item->link); ?>" target="_blank" title="<?php echo htmlspecialchars($item->proje); ?>" class="btn btn-tertiary text-white mt-3 ml-2 animate-up-2">
                             İncele
                             <span class="icon icon-xs ml-2">
                                 <i class="far fa-eye"></i>
                             </span>
                         </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
