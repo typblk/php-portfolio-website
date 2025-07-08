@@ -51,14 +51,14 @@ $urunler = new Tayyip();
                     <tbody class="table-border-bottom-0">
                         <?php foreach ($urunler->getUrun() as $item) : ?>
                             <tr>
-                                <td><img src="../images/<?php echo $item->fotograf ?>" width="50" alt="" class="img-fluid"></td>
-                                <td><span class="fw-medium"><?php echo $item->baslik ?></span></td>
+                                <td><img src="../images/<?php echo htmlspecialchars($item->fotograf, ENT_QUOTES, 'UTF-8'); ?>" width="50" alt="<?php echo htmlspecialchars($item->baslik, ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid"></td>
+                                <td><span class="fw-medium"><?php echo htmlspecialchars($item->baslik, ENT_QUOTES, 'UTF-8'); ?></span></td>
                                 <td>
                                     <div class="dropdown">
                                         <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded"></i></button>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="urun-duzenle.php?id=<?php echo $item->id ?>"><i class="bx bx-edit-alt me-1"></i> Düzenle</a>
-                                            <button class="dropdown-item Ssil" data-id="<?php echo $item->id ?>" data-add="<?php echo $item->baslik ?>" data-bs-toggle="modal" data-bs-target="#modalTsil"><i class="bx bx-trash me-1"></i> Sil</button>
+                                            <a class="dropdown-item" href="urun-duzenle.php?id=<?php echo htmlspecialchars($item->id, ENT_QUOTES, 'UTF-8'); ?>"><i class="bx bx-edit-alt me-1"></i> Düzenle</a>
+                                            <button class="dropdown-item Ssil" data-id="<?php echo htmlspecialchars($item->id, ENT_QUOTES, 'UTF-8'); ?>" data-add="<?php echo htmlspecialchars($item->baslik, ENT_QUOTES, 'UTF-8'); ?>" data-bs-toggle="modal" data-bs-target="#modalTsil"><i class="bx bx-trash me-1"></i> Sil</button>
                                         </div>
                                     </div>
                                 </td>

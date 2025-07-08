@@ -124,7 +124,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM hizmetler WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -226,7 +226,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM projeler WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -326,7 +326,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM bloglar WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -404,7 +404,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM slayt WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -598,7 +598,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM yorumlar WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -680,7 +680,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $fotografPath = '../images/' . $row['fotograf'];
+        $fotografPath = __DIR__ . '/../images/' . $row['fotograf'];
 
         $deleteSql = "DELETE FROM urunler WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
@@ -746,7 +746,7 @@ class Tayyip extends Db
             return false;
         }
 
-        $logoPath = '../images/' . $row['logo'];
+        $logoPath = __DIR__ . '/../images/' . $row['logo'];
 
         $deleteSql = "DELETE FROM teknolojiler WHERE id=:id";
         $deleteStmt = $this->connect()->prepare($deleteSql);
