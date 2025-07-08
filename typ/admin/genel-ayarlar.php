@@ -152,6 +152,46 @@ if (isset($_POST["submit"])) {
 
     $logoNewName = $item->logo;
     $faviconNewName = $item->favicon;
+    $cvNewName = $item->cv; // Preserve existing CV name by default
+
+    // CV PDF Upload Handling
+    $cvUploadDir = '../dosyalar/'; // CVs will be stored here
+    $allowedCvTypes = ['application/pdf'];
+    $maxCvFileSize = 5 * 1024 * 1024; // 5MB for CV
+
+    if (isset($_FILES['cv_pdf']) && $_FILES['cv_pdf']['error'] == UPLOAD_ERR_OK) {
+        $cv_pdf = $_FILES['cv_pdf'];
+
+        // Validate CV file type
+        if (!in_array($cv_pdf['type'], $allowedCvTypes)) {
+            $errors[] = "Geçersiz CV dosya türü: " . $cv_pdf['name'] . ". Sadece PDF kabul edilir.";
+        }
+        // Validate CV file size
+        if ($cv_pdf['size'] > $maxCvFileSize) {
+            $errors[] = "CV dosyası çok büyük: " . $cv_pdf['name'] . ". Maksimum 5MB.";
+        }
+
+        if (empty($errors)) { // Proceed if no validation errors for CV
+            if (!file_exists($cvUploadDir)) {
+                mkdir($cvUploadDir, 0777, true);
+            }
+            // Sanitize filename (optional, but good practice)
+            $safe_cv_filename = preg_replace("/[^a-zA-Z0-9\_\-\.]/", "_", basename($cv_pdf["name"]));
+            $cvDestinationPath = $cvUploadDir . $safe_cv_filename;
+
+            // Delete old CV if exists and filename changes - or always replace with new one if same name
+            if (!empty($item->cv) && $item->cv != $safe_cv_filename && file_exists($cvUploadDir . $item->cv)) {
+                unlink($cvUploadDir . $item->cv);
+            }
+
+            if (move_uploaded_file($cv_pdf['tmp_name'], $cvDestinationPath)) {
+                $cvNewName = $safe_cv_filename; // Update CV name to the new one
+            } else {
+                $errors[] = "CV dosyası yüklenirken bir hata oluştu: " . $safe_cv_filename;
+            }
+        }
+    }
+
 
     if (!empty($logo['name'])) {
         $uploadedFileName = processFileUpload($logo, $site_adi, $uploadDir, $allowedTypes, $maxFileSize, $errors);
@@ -183,7 +223,14 @@ if (isset($_POST["submit"])) {
             </div>';
         }
     } else {
-        if ($ayarlar->editGenelAyarlar($site_adi, $site_desc, $site_keyw, $logoNewName, $faviconNewName)) {
+        // Attempt to save general settings first
+        $genelAyarlarSuccess = $ayarlar->editGenelAyarlar($site_adi, $site_desc, $site_keyw, $logoNewName, $faviconNewName);
+
+        // Attempt to save CV settings
+        // $cvNewName is already set from the CV upload logic block or defaults to $item->cv
+        $cvAyarSuccess = $ayarlar->editcv($cvNewName); // editcv should ideally return true/false
+
+        if ($genelAyarlarSuccess && $cvAyarSuccess) { // Check if both were successful
             echo '
             <div class="bs-toast toast toast-placement-ex m-2 top-0 end-0 fade show bg-success" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
@@ -260,6 +307,15 @@ if (isset($_POST["submit"])) {
                         <label for="favicon" class="form-label">Favikon</label> <br>
                         <img src="../images/<?php echo htmlspecialchars($item->favicon) ?>" width="50" alt="">
                         <input class="form-control" type="file" id="favicon" name="favicon">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cv_pdf" class="form-label">CV (PDF)</label> <br>
+                        <?php if (!empty($item->cv)): ?>
+                            <p class="form-text">Mevcut CV: <a href="../dosyalar/<?php echo htmlspecialchars($item->cv); ?>" target="_blank"><?php echo htmlspecialchars($item->cv); ?></a></p>
+                        <?php else: ?>
+                            <p class="form-text">Henüz CV yüklenmemiş.</p>
+                        <?php endif; ?>
+                        <input class="form-control" type="file" id="cv_pdf" name="cv_pdf" accept=".pdf">
                     </div>
                     <button type="submit" name="submit" class="btn btn-primary">Kaydet</button>
                 </form>

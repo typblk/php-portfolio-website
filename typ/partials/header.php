@@ -203,8 +203,17 @@ $title = $pageTitles[$page] ?? '';
                     </ul>
                 </div>
                 <div class="d-flex align-items-center">
-                    <a href="<?php echo htmlspecialchars($item->cv) ?>" target="_blank" class="btn btn-outline-soft d-none d-md-inline mr-md-3 animate-up-2">Özgeçmiş <i class="far fa-file ml-2"></i></a>
-                    <button class="navbar-toggler ml-2" type="button" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation">
+                    <?php if (!empty($item->cv)): ?>
+                        <button type="button" class="btn btn-outline-soft d-none d-md-inline mr-md-3 animate-up-2" data-bs-toggle="modal" data-bs-target="#cvModal">
+                            Özgeçmiş <i class="far fa-file ml-2"></i>
+                        </button>
+                    <?php else: ?>
+                        {/* Optionally, display a disabled button or hide it if no CV is set */}
+                        <button type="button" class="btn btn-outline-soft d-none d-md-inline mr-md-3 animate-up-2" disabled>
+                            Özgeçmiş <i class="far fa-file ml-2"></i>
+                        </button>
+                    <?php endif; ?>
+                    <button class="navbar-toggler ml-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation"> {/* Assuming BS5 for collapse too */}
                         <span class="navbar-toggler-icon"></span>
                     </button>
                 </div>
